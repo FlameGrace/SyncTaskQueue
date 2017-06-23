@@ -1,9 +1,9 @@
 //
 //  DownloadTaskQueue.m
-//  flamegrace@hotmail.com
+//  leapmotor
 //
-//  Created by Flame Grace on 2017/6/12.
-//  Copyright © 2017年 flamegrace@hotmail.com. All rights reserved.
+//  Created by 李嘉军 on 2017/6/12.
+//  Copyright © 2017年 Leapmotor. All rights reserved.
 //
 
 #import "SyncTaskQueue.h"
@@ -15,7 +15,7 @@
 @property (readwrite,strong, nonatomic) NSMutableArray *unexecutedTasks;
 @property (readwrite, assign, nonatomic) BOOL isExecuting;
 @property (readwrite, assign, nonatomic) BOOL isPause;
-@property (readwrite, strong, nonatomic) STTask *currentTask;
+@property (readwrite, strong, nonatomic) Task *currentTask;
 
 @end
 
@@ -65,7 +65,7 @@
 
 
 
-- (void)taskFinish:(STTask *)task error:(NSError *)error needRetry:(BOOL)needRetry
+- (void)taskFinish:(Task *)task error:(NSError *)error needRetry:(BOOL)needRetry
 {
     NSTimeInterval duration = self.retryDuration;
     if(!needRetry)
@@ -73,8 +73,7 @@
         duration = self.executeDuration;
         [self.unexecutedTasks removeObject:task];
     }
-    [self executeTask];
-//    [self performSelector:@selector(executeTask) withObject:nil afterDelay:duration];
+    [self performSelector:@selector(executeTask) withObject:nil afterDelay:duration];
 }
 
 - (void)restartTask
@@ -100,7 +99,7 @@
             self.isExecuting = NO;
             return;
         }
-        STTask * task = [self.unexecutedTasks firstObject];
+        Task * task = [self.unexecutedTasks firstObject];
         self.currentTask = task;
         
         if(!task)
@@ -113,13 +112,13 @@
     });
 }
 
-- (void)removeTask:(STTask *)task
+- (void)removeTask:(Task *)task
 {
     [self.cacheTasks removeObject:task];
     [self.unexecutedTasks removeObject:task];
 }
 
-- (void)addTask:(STTask *)task
+- (void)addTask:(Task *)task
 {
     if(!task)
     {
@@ -130,7 +129,7 @@
         //检查cacheTasks是否已有此标识符的任务
         if(task.identifierType == TaskIdentifierInQueueUnique)
         {
-            [self.cacheTasks enumerateObjectsUsingBlock:^(STTask *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [self.cacheTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 if([obj.identifier isEqualToString:task.identifier])
                 {
                     return;
@@ -141,7 +140,7 @@
         if(task.identifierType == TaskIdentifierInQueueUnexecutedUnique)
         {
             NSArray *exectuteTasks = [NSArray arrayWithArray:self.unexecutedTasks];
-            [exectuteTasks enumerateObjectsUsingBlock:^(STTask *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [exectuteTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 if([obj.identifier isEqualToString:task.identifier])
                 {
                     return;
@@ -156,10 +155,10 @@
 }
 
 
-- (STTask *)taskByIdentifier:(NSString *)identifier
+- (Task *)taskByIdentifier:(NSString *)identifier
 {
-    __block STTask *task = nil;
-    [self.cacheTasks enumerateObjectsUsingBlock:^(STTask *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    __block Task *task = nil;
+    [self.cacheTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if([identifier isEqualToString:obj.identifier])
         {
             *stop = YES;
@@ -183,6 +182,27 @@
     }
     self.isPause = NO;
     [self restartTask];
+}
+
+@end
+
+
+
+
+@implementation SyncTaskQueue(Identifier)
+
+- (NSArray *)cacheIdentifiers
+{
+    NSArray *cache = [NSArray arrayWithArray:self.cacheTasks];
+    NSArray *identifiers = [cache valueForKeyPath:@"identifier"];
+    return identifiers;
+}
+
+- (NSArray *)unexecutedIdentifiers
+{
+    NSArray *unexecuted = [NSArray arrayWithArray:self.unexecutedTasks];
+    NSArray *identifiers = [unexecuted valueForKeyPath:@"identifier"];
+    return identifiers;
 }
 
 @end

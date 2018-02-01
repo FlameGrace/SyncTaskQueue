@@ -12,7 +12,7 @@ typedef NSError *(^ExecuteTaskBlock)();
 
 @interface STExecuteTask : STTask
 
-@property (strong, nonatomic) ExecuteTaskBlock execute;
+@property (copy, nonatomic) ExecuteTaskBlock execute;
 
 
 

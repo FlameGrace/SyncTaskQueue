@@ -8,7 +8,7 @@
 
 #import "STTask.h"
 
-typedef NSError *(^ExecuteTaskBlock)();
+typedef NSError *(^ExecuteTaskBlock)(void);
 
 @interface STExecuteTask : STTask
 

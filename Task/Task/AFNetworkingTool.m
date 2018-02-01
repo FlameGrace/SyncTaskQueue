@@ -15,6 +15,7 @@ static AFURLSessionManager *staticSessionManager;
 + (AFURLSessionManager*)theAFURLSessionManager {
     if (!staticSessionManager) {
         staticSessionManager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+        staticSessionManager.completionQueue = dispatch_get_global_queue(0, 0);
         ((AFJSONResponseSerializer*)staticSessionManager.responseSerializer).acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/json",@"text/javascript",@"text/html",@"text/plain",nil];
     }
     return staticSessionManager;
@@ -31,7 +32,10 @@ static AFURLSessionManager *staticSessionManager;
     if ([AFNetworkReachabilityManager sharedManager].isReachableViaWiFi ||
         [AFNetworkReachabilityManager sharedManager].isReachableViaWWAN) {
         // 状态栏显示网络加载样式
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+        });
+        
         
         NSMutableURLRequest *request = nil;
         if([type isEqualToString:RequestType_POST])
@@ -50,7 +54,9 @@ static AFURLSessionManager *staticSessionManager;
         void (^dataTaskHandle)(NSURLResponse *response, id responseObject, NSError *error) = ^(NSURLResponse *response, id responseObject, NSError *error) {
             
             // 状态栏隐藏网络加载样式
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+            });
             completionHandler(response,responseObject,error);
         };
         
@@ -89,7 +95,9 @@ static AFURLSessionManager *staticSessionManager;
     if ([AFNetworkReachabilityManager sharedManager].isReachableViaWiFi ||
         [AFNetworkReachabilityManager sharedManager].isReachableViaWWAN) {
         // 状态栏显示网络加载样式
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+        });
         NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer]
                                         requestWithMethod:type
                                         URLString:url
@@ -102,6 +110,10 @@ static AFURLSessionManager *staticSessionManager;
             NSURL *URL = [NSURL fileURLWithPath:savePath];
             return URL;
         } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
+            // 状态栏隐藏网络加载样式
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+            });
             completionHandler(response,filePath,error);
         }];
          NSLog(@"下载接口：%@。",request.URL);

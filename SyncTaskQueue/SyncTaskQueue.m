@@ -2,8 +2,8 @@
 //  DownloadTaskQueue.m
 //  leapmotor
 //
-//  Created by 李嘉军 on 2017/6/12.
-//  Copyright © 2017年 Leapmotor. All rights reserved.
+//  Created by Flame Grace on 2017/6/12.
+//  Copyright © 2017年 Flame Grace. All rights reserved.
 //
 
 #import "SyncTaskQueue.h"
@@ -15,7 +15,7 @@
 @property (readwrite,strong, nonatomic) NSMutableArray *unexecutedTasks;
 @property (readwrite, assign, nonatomic) BOOL isExecuting;
 @property (readwrite, assign, nonatomic) BOOL isPause;
-@property (readwrite, strong, nonatomic) Task *currentTask;
+@property (readwrite, strong, nonatomic) STTask *currentTask;
 
 @end
 
@@ -65,7 +65,7 @@
 
 
 
-- (void)taskFinish:(Task *)task error:(NSError *)error needRetry:(BOOL)needRetry
+- (void)taskFinish:(STTask *)task error:(NSError *)error needRetry:(BOOL)needRetry
 {
     NSTimeInterval duration = self.retryDuration;
     if(!needRetry)
@@ -73,7 +73,11 @@
         duration = self.executeDuration;
         [self.unexecutedTasks removeObject:task];
     }
-    [self performSelector:@selector(executeTask) withObject:nil afterDelay:duration];
+    __weak typeof(self) weakSelf = self;
+    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(duration/*延迟执行时间*/ * NSEC_PER_SEC));
+    dispatch_after(delayTime, self.queue, ^{
+        [weakSelf executeTask];
+    });
 }
 
 - (void)restartTask
@@ -99,7 +103,7 @@
             self.isExecuting = NO;
             return;
         }
-        Task * task = [self.unexecutedTasks firstObject];
+        STTask * task = [self.unexecutedTasks firstObject];
         self.currentTask = task;
         
         if(!task)
@@ -112,53 +116,64 @@
     });
 }
 
-- (void)removeTask:(Task *)task
+- (void)removeTask:(STTask *)task
 {
-    [self.cacheTasks removeObject:task];
-    [self.unexecutedTasks removeObject:task];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        dispatch_sync(self.queue, ^{
+            NSLog(@"移除task：%@",task.identifier);
+            [self.cacheTasks removeObject:task];
+            [self.unexecutedTasks removeObject:task];
+        });
+    });
 }
 
-- (void)addTask:(Task *)task
+- (void)addTask:(STTask *)task
 {
-    if(!task)
-    {
-        return;
-    }
-    if(task.identifier&&task.identifier.length > 0 )
-    {
-        //检查cacheTasks是否已有此标识符的任务
-        if(task.identifierType == TaskIdentifierInQueueUnique)
-        {
-            [self.cacheTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                if([obj.identifier isEqualToString:task.identifier])
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        dispatch_async(self.queue, ^{
+            if(!task)
+            {
+                return;
+            }
+            if(task.identifier&&task.identifier.length > 0 )
+            {
+                if(task.identifierType == TaskIdentifierInQueueUnique)
                 {
-                    return;
+                    NSArray *cacheTasks = [NSArray arrayWithArray:self.cacheTasks];
+                    for (STTask *obj in cacheTasks)
+                    {
+                        if([obj.identifier isEqualToString:task.identifier])
+                        {
+                            return;
+                        }
+                    }
                 }
-            }];
-        }
-        //检查exectuteTasks是否已有此标识符的任务
-        if(task.identifierType == TaskIdentifierInQueueUnexecutedUnique)
-        {
-            NSArray *exectuteTasks = [NSArray arrayWithArray:self.unexecutedTasks];
-            [exectuteTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                if([obj.identifier isEqualToString:task.identifier])
+                if(task.identifierType == TaskIdentifierInQueueUnexecutedUnique)
                 {
-                    return;
+                    NSArray *unexecutedTasks = [NSArray arrayWithArray:self.unexecutedTasks];
+                    for (STTask *obj in unexecutedTasks)
+                    {
+                        if([obj.identifier isEqualToString:task.identifier])
+                        {
+                            return;
+                        }
+                    }
                 }
-            }];
-        }
-    }
-    task.finishHandle = self;
-    [self.cacheTasks addObject:task];
-    [self.unexecutedTasks addObject:task];
-    [self restartTask];
+            }
+            
+            task.finishHandle = self;
+            [self.cacheTasks addObject:task];
+            [self.unexecutedTasks addObject:task];
+            [self restartTask];
+        });
+    });
 }
 
 
-- (Task *)taskByIdentifier:(NSString *)identifier
+- (STTask *)taskByIdentifier:(NSString *)identifier
 {
-    __block Task *task = nil;
-    [self.cacheTasks enumerateObjectsUsingBlock:^(Task *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    __block STTask *task = nil;
+    [self.cacheTasks enumerateObjectsUsingBlock:^(STTask *obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if([identifier isEqualToString:obj.identifier])
         {
             *stop = YES;

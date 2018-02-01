@@ -2,16 +2,16 @@
 //  DownloadTaskQueue.h
 //  leapmotor
 //
-//  Created by 李嘉军 on 2017/6/12.
-//  Copyright © 2017年 Leapmotor. All rights reserved.
+//  Created by Flame Grace on 2017/6/12.
+//  Copyright © 2017年 Flame Grace. All rights reserved.
 //  同步串行任务队列，一次只执行一个任务
 
 #import <Foundation/Foundation.h>
-#import "Task.h"
+#import "STTask.h"
 
 @interface SyncTaskQueue : NSObject
 /*当前正在执行的任务*/
-@property (readonly, nonatomic) Task *currentTask;
+@property (readonly, nonatomic) STTask *currentTask;
 /*缓存已添加的所有的任务列表，可用于筛选是否重复添加任务*/
 @property (readonly, nonatomic) NSMutableArray *cacheTasks;
 /*保存未执行的任务列表*/
@@ -29,11 +29,11 @@
  */
 - (instancetype)initWithQueue:(dispatch_queue_t)queue;
 
-- (void)addTask:(Task *)task; 
+- (void)addTask:(STTask *)task;
 
-- (void)removeTask:(Task *)task;
+- (void)removeTask:(STTask *)task;
 
-- (Task *)taskByIdentifier:(NSString *)identifier;
+- (STTask *)taskByIdentifier:(NSString *)identifier;
 //暂停所有任务
 - (void)pasue;
 //重新开始

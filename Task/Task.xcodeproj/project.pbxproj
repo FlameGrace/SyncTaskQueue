@@ -306,7 +306,7 @@
 				TargetAttributes = {
 					86AF78271EFA660C00851BCA = {
 						CreatedOnToolsVersion = 8.3.3;
-						DevelopmentTeam = PK25G5QCH4;
+						DevelopmentTeam = XCPX82Y35G;
 						ProvisioningStyle = Automatic;
 					};
 					86AF78401EFA660C00851BCA = {
@@ -584,7 +584,7 @@
 			baseConfigurationReference = 3568DE712063E4BD61D2E2CB /* Pods-Task.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = PK25G5QCH4;
+				DEVELOPMENT_TEAM = XCPX82Y35G;
 				GCC_PREFIX_HEADER = $PROJECT_DIR/Task/PrefixHeader.pch;
 				INFOPLIST_FILE = Task/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -598,7 +598,7 @@
 			baseConfigurationReference = 67F6841AAAFF9484650039E9 /* Pods-Task.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = PK25G5QCH4;
+				DEVELOPMENT_TEAM = XCPX82Y35G;
 				GCC_PREFIX_HEADER = $PROJECT_DIR/Task/PrefixHeader.pch;
 				INFOPLIST_FILE = Task/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

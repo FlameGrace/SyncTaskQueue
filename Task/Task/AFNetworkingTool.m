@@ -28,49 +28,27 @@ static AFURLSessionManager *staticSessionManager;
            timeout:(NSTimeInterval)timeout
  completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler  {
      NSLog(@"HTTP请求：URL:%@，参数：%@，类型：%@",url,dic,type);
-     NSURLSessionDataTask *task = nil;
-    if ([AFNetworkReachabilityManager sharedManager].isReachableViaWiFi ||
-        [AFNetworkReachabilityManager sharedManager].isReachableViaWWAN) {
-        // 状态栏显示网络加载样式
+    // 状态栏显示网络加载样式
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    });
+    NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer] requestWithMethod:type URLString:url parameters:dic error:nil];
+    [request setTimeoutInterval:timeout];
+    
+    void (^dataTaskHandle)(NSURLResponse *response, id responseObject, NSError *error) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+        
+        // 状态栏隐藏网络加载样式
         dispatch_async(dispatch_get_main_queue(), ^{
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
         });
-        
-        
-        NSMutableURLRequest *request = nil;
-        if([type isEqualToString:RequestType_POST])
-        {
-            request = [[NSMutableURLRequest alloc]initWithURL:[NSURL URLWithString:url]];
-            request.HTTPMethod = RequestType_POST;
-            NSData *data = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:nil];
-            [request setHTTPBody:data];
-        }
-        else
-        {
-            request = [[AFHTTPRequestSerializer serializer] requestWithMethod:type URLString:url parameters:dic error:nil];
-        }
-        [request setTimeoutInterval:timeout];
-        
-        void (^dataTaskHandle)(NSURLResponse *response, id responseObject, NSError *error) = ^(NSURLResponse *response, id responseObject, NSError *error) {
-            
-            // 状态栏隐藏网络加载样式
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-            });
-            completionHandler(response,responseObject,error);
-        };
-        
-        task = [[self theAFURLSessionManager] dataTaskWithRequest:request
-                                                                               completionHandler:dataTaskHandle];
-        // 开始请求
-        NSLog(@"HTTP请求：网络环境允许，开始请求。");
-        [task resume];
-    } else {
-        completionHandler(NULL,NULL,[NSError errorWithDomain:NSStringFromClass(self)
-                                                        code:NSURLErrorNotConnectedToInternet
-                                                    userInfo:@{@"errorKey":@"Network Not Reachable"}]);
-        NSLog(@"HTTP请求：URL:%@，参数：%@，类型：%@。网络不可用，失败。",url,dic,type);
-    }
+        completionHandler(response,responseObject,error);
+    };
+    
+    NSURLSessionDataTask *task = [[self theAFURLSessionManager] dataTaskWithRequest:request
+                                            completionHandler:dataTaskHandle];
+    // 开始请求
+    NSLog(@"HTTP请求：网络环境允许，开始请求。");
+    [task resume];
     return task;
 }
 
@@ -90,40 +68,32 @@ static AFURLSessionManager *staticSessionManager;
                               requestType:(NSString*)type
                                  progress:(void (^)(NSProgress *downloadProgress)) downloadProgressBlock
                                  savePath:(NSString *)savePath
-                        completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler {
-    NSURLSessionDownloadTask *task = nil;
-    if ([AFNetworkReachabilityManager sharedManager].isReachableViaWiFi ||
-        [AFNetworkReachabilityManager sharedManager].isReachableViaWWAN) {
-        // 状态栏显示网络加载样式
+                        completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler
+{
+    // 状态栏显示网络加载样式
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    });
+    NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer]
+                                    requestWithMethod:type
+                                    URLString:url
+                                    parameters:dic
+                                    error:nil];
+    NSURLSessionDownloadTask *task = [[self theAFURLSessionManager] downloadTaskWithRequest:request progress:downloadProgressBlock destination:^NSURL *(NSURL *targetPath, NSURLResponse *response) {
+        if (savePath.length==0) {
+            return NULL;
+        }
+        NSURL *URL = [NSURL fileURLWithPath:savePath];
+        return URL;
+    } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
+        // 状态栏隐藏网络加载样式
         dispatch_async(dispatch_get_main_queue(), ^{
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
         });
-        NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer]
-                                        requestWithMethod:type
-                                        URLString:url
-                                        parameters:dic
-                                        error:nil];
-        task = [[self theAFURLSessionManager] downloadTaskWithRequest:request progress:downloadProgressBlock destination:^NSURL *(NSURL *targetPath, NSURLResponse *response) {
-            if (savePath.length==0) {
-                return NULL;
-            }
-            NSURL *URL = [NSURL fileURLWithPath:savePath];
-            return URL;
-        } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
-            // 状态栏隐藏网络加载样式
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-            });
-            completionHandler(response,filePath,error);
-        }];
-         NSLog(@"下载接口：%@。",request.URL);
-        [task resume];
-    } else {
-         NSLog(@"下载接口错误，Error：%@。",@"网络不允许");
-        completionHandler(NULL,NULL,[NSError errorWithDomain:NSStringFromClass(self)
-                                                        code:NSURLErrorNotConnectedToInternet
-                                                    userInfo:@{@"errorKey":@"Network Not Reachable"}]);
-    }
+        completionHandler(response,filePath,error);
+    }];
+    NSLog(@"下载接口：%@。",request.URL);
+    [task resume];
     return task;
 }
 

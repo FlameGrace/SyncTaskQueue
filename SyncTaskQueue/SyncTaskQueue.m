@@ -45,7 +45,7 @@
     if(!queue)
     {
         NSString *queueIdentifer = [NSString stringWithFormat:@"%@-%f",NSStringFromClass([self class]),[NSDate date].timeIntervalSince1970];
-        queue = dispatch_queue_create([queueIdentifer UTF8String], DISPATCH_QUEUE_PRIORITY_DEFAULT);
+        queue = dispatch_queue_create([queueIdentifer UTF8String], DISPATCH_QUEUE_SERIAL);
     }
     self.retryDuration = 5;
     self.queue = queue;
@@ -118,54 +118,50 @@
 
 - (void)removeTask:(STTask *)task
 {
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        dispatch_sync(self.queue, ^{
-            NSLog(@"移除task：%@",task.identifier);
-            [self.cacheTasks removeObject:task];
-            [self.unexecutedTasks removeObject:task];
-        });
+   dispatch_async(self.queue, ^{
+        NSLog(@"移除task：%@",task.identifier);
+        [self.cacheTasks removeObject:task];
+        [self.unexecutedTasks removeObject:task];
     });
 }
 
 - (void)addTask:(STTask *)task
 {
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        dispatch_async(self.queue, ^{
-            if(!task)
+   dispatch_async(self.queue, ^{
+        if(!task)
+        {
+            return;
+        }
+        if(task.identifier&&task.identifier.length > 0 )
+        {
+            if(task.identifierType == TaskIdentifierInQueueUnique)
             {
-                return;
-            }
-            if(task.identifier&&task.identifier.length > 0 )
-            {
-                if(task.identifierType == TaskIdentifierInQueueUnique)
+                NSArray *cacheTasks = [NSArray arrayWithArray:self.cacheTasks];
+                for (STTask *obj in cacheTasks)
                 {
-                    NSArray *cacheTasks = [NSArray arrayWithArray:self.cacheTasks];
-                    for (STTask *obj in cacheTasks)
+                    if([obj.identifier isEqualToString:task.identifier])
                     {
-                        if([obj.identifier isEqualToString:task.identifier])
-                        {
-                            return;
-                        }
-                    }
-                }
-                if(task.identifierType == TaskIdentifierInQueueUnexecutedUnique)
-                {
-                    NSArray *unexecutedTasks = [NSArray arrayWithArray:self.unexecutedTasks];
-                    for (STTask *obj in unexecutedTasks)
-                    {
-                        if([obj.identifier isEqualToString:task.identifier])
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
             }
+            if(task.identifierType == TaskIdentifierInQueueUnexecutedUnique)
+            {
+                NSArray *unexecutedTasks = [NSArray arrayWithArray:self.unexecutedTasks];
+                for (STTask *obj in unexecutedTasks)
+                {
+                    if([obj.identifier isEqualToString:task.identifier])
+                    {
+                        return;
+                    }
+                }
+            }
+        }
             
-            task.finishHandle = self;
-            [self.cacheTasks addObject:task];
-            [self.unexecutedTasks addObject:task];
-            [self restartTask];
-        });
+        task.finishHandle = self;
+        [self.cacheTasks addObject:task];
+        [self.unexecutedTasks addObject:task];
+        [self restartTask];    
     });
 }
 

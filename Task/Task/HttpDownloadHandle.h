@@ -7,19 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "DownLoadHandleProtocol.h"
 
-@class HttpDownloadHandle;
-
-@protocol HttpDownloadHandleDelegate <NSObject>
-
-- (void)httpDownloadHandle:(HttpDownloadHandle *)handle downloadNewImage:(NSString *)imagePath;
-
-@end
-
-@interface HttpDownloadHandle : NSObject <HttpDownloadHandleDelegate>
-
-@property (weak, nonatomic) id <HttpDownloadHandleDelegate> delegate;
-
-+ (void)clear;
+@interface HttpDownloadHandle : NSObject <DownLoadHandleProtocol,DownloadHandleDelegate>
 
 @end

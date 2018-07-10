@@ -92,7 +92,6 @@ static AFURLSessionManager *staticSessionManager;
         });
         completionHandler(response,filePath,error);
     }];
-    NSLog(@"下载接口：%@。",request.URL);
     [task resume];
     return task;
 }

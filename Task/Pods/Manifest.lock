@@ -14,16 +14,22 @@ PODS:
   - AFNetworking/Serialization (3.1.0)
   - AFNetworking/UIKit (3.1.0):
     - AFNetworking/NSURLSession
+  - DispatchTimer (0.0.2)
   - NetWorkStateManager (0.0.1)
+  - TimeOutHandle (0.0.5):
+    - DispatchTimer
 
 DEPENDENCIES:
   - AFNetworking
   - NetWorkStateManager
+  - TimeOutHandle
 
 SPEC CHECKSUMS:
   AFNetworking: 5e0e199f73d8626b11e79750991f5d173d1f8b67
+  DispatchTimer: 9df46f8ae7fe2d036c3358f142f0a57a48782d4c
   NetWorkStateManager: f22243f9a8d276335fbe966dae4bae6b7737bc79
+  TimeOutHandle: 7227691d9a3aea8d5999224c1850c59e43fe0f27
 
-PODFILE CHECKSUM: be362e59c1bd41b60896fc5d02edc84e0ad1e6ec
+PODFILE CHECKSUM: 295065e08af0dc75c8c66f11bc8cbd55c20af0e6
 
-COCOAPODS: 1.2.0.beta.3
+COCOAPODS: 1.4.0

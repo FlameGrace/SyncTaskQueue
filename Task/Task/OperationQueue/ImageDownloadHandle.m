@@ -1,37 +1,36 @@
 //
-//  LMHttpHandle.m
+//  ImageDownloadHandle.m
 //  Task
 //
-//  Created by Flame Grace on 2017/6/22.
-//  Copyright © 2017年 flamegrace. All rights reserved.
+//  Created by MAC on 2018/7/6.
+//  Copyright © 2018年 flamegrace. All rights reserved.
 //
 
-#import "HttpDownloadHandle.h"
-#import "SyncTaskQueue.h"
-#import "STExecuteTask.h"
-#import "SimpleHttpDownloadTask.h"
+#import "ImageDownloadHandle.h"
+#import "HttpDownloadOperation.h"
 #define RandomImageHttpRequestUrl (@"https://unsplash.it/1920/1080/?random")
+#import "DownloadOperationQueue.h"
 
-@interface HttpDownloadHandle()
+@interface ImageDownloadHandle()
 {
     int downloadHandle;
 }
 
-@property (strong, nonatomic) SyncTaskQueue *taskQueue;
-
+@property (strong, nonatomic) DownloadOperationQueue *taskQueue;
 
 @end
 
-
-@implementation HttpDownloadHandle
+@implementation ImageDownloadHandle
 @synthesize delegate = _delegate;
+
 
 - (instancetype)init
 {
     if(self = [super init])
     {
         [[self class] create];
-        self.taskQueue = [[SyncTaskQueue alloc]init];
+        self.taskQueue = [[DownloadOperationQueue alloc]init];
+        self.taskQueue.maxConcurrentOperationCount = 1;
         [self observeNotifications];
         [self addQueryTask];
         
@@ -42,97 +41,83 @@
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter]removeObserver:self];
+    [self.taskQueue cancelAllOperations];
     self.taskQueue = nil;
+    NSLog(@"灰飞烟灭");
 }
 
 - (void)observeNotifications
 {
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(netWorkStateChanged:) name:NetWorkStateChangedNotificationName object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidBecomeActive:)
-                                                 name:UIApplicationDidBecomeActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidEnterBackground:)
-                                                 name:UIApplicationDidEnterBackgroundNotification object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(applicationDidBecomeActive:)
+//                                                 name:UIApplicationDidBecomeActiveNotification object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(applicationDidEnterBackground:)
+//                                                 name:UIApplicationDidEnterBackgroundNotification object:nil];
 }
 - (void)netWorkStateChanged:(NSNotification *)notification
 {
     if([NetWorkStateManager shareManager].netWorkState != NetWorkStateUnknown ||
        [NetWorkStateManager shareManager].netWorkState !=NetWorkStateNotReachable)
     {
-        [self.taskQueue resume];
+        self.taskQueue.suspended = NO;
         [self addQueryTask];
     }
     if([NetWorkStateManager shareManager].netWorkState ==NetWorkStateNotReachable)
     {
-        [self.taskQueue pasue];
+        self.taskQueue.suspended = YES;
     }
-}
-
-- (void)applicationDidBecomeActive:(NSNotification *)notification
-{
-    [self.taskQueue resume];
-    [self addQueryTask];
-}
-
-- (void)applicationDidEnterBackground:(NSNotification *)notification
-{
-    [self.taskQueue pasue];
 }
 
 
 - (void)downloadHandle:(id<DownLoadHandleProtocol>)handle downloadNewImage:(NSString *)imagePath
 {
+    NSLog(@"现在还有%lu个任务",(unsigned long)self.taskQueue.operationCount);
     if(self.delegate && [self.delegate respondsToSelector:@selector(downloadHandle:downloadNewImage:)])
     {
         [self.delegate downloadHandle:handle downloadNewImage:imagePath];
     }
 }
 
-- (void)addQueryTask
+- (void)query
 {
-    
-    STExecuteTask *query = [STExecuteTask task];
-    query.identifierType = TaskIdentifierInQueueUnexecutedUnique;
-    query.identifier = @"HttpDownloadHandleQuery";
+    int lastDownloadHandle = downloadHandle;
+    downloadHandle += 10;
+    NSInteger download = downloadHandle;
+    NSLog(@"添加query任务前：%d  %d。",lastDownloadHandle,downloadHandle);
+    NSBlockOperation *operation = [[NSBlockOperation alloc]init];
     WeakObj(self)
-    query.execute = ^NSError *{
-        
+    [operation addExecutionBlock:^{
         StrongObj(self)
-        int lastDownloadHandle = downloadHandle;
-        downloadHandle += 10;
-        if(downloadHandle == 100)
-        {
-            downloadHandle = 0;
-        }
-        for (int i= lastDownloadHandle; i<downloadHandle; i++) {
+        
+        for (int i= lastDownloadHandle; i< download; i++) {
             NSString *image = RandomImageHttpRequestUrl;
             NSString *savePath = [[[self class] saveDir] stringByAppendingPathComponent:[NSString stringWithFormat:@"dd_%d.jpg",i]];
-            [self.taskQueue addTask:[self addDownloadTask:image savePath:savePath]];
+            [self addDownloadTask:image savePath:savePath];
         }
-        return nil;
-    };
-    [self.taskQueue addTask:query];
+    }];
+    [self.taskQueue addOperation:operation];
 }
 
+- (void)addQueryTask
+{
+    @synchronized(self) {
+        [self query];
+    }
+}
 
-
-- (SimpleHttpDownloadTask *)addDownloadTask:(NSString *)image savePath:(NSString *)savePath
+- (void)addDownloadTask:(NSString *)image savePath:(NSString *)savePath
 {
     if([[NSFileManager defaultManager]fileExistsAtPath:savePath])
     {
-        return nil;
+        return;
     }
-    SimpleHttpDownloadTask *task = [SimpleHttpDownloadTask task];
-    task.identifierType = TaskIdentifierInQueueUnique;
-    task.identifier = [savePath lastPathComponent];
-    task.url = image;
+    HttpDownloadOperation *task = [HttpDownloadOperation taskWithUrl:image paras:nil requestType:RequestType_GET];
+    task.name = [savePath lastPathComponent];
     task.savePath = savePath;
-    task.requestType = RequestType_GET;
-    task.parameters = nil;
     WeakObj(self)
-    
     task.completeHandle = ^(NSURLResponse *response, id responseObject, NSError *error) {
         StrongObj(self)
         if(!error)
@@ -141,7 +126,8 @@
             return ;
         }
     };
-    return task;
+    NSLog(@"添加任务：%@。",task.name);
+    [self.taskQueue addOperation:task];
 }
 
 + (NSString *)saveDir

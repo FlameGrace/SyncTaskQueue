@@ -8,14 +8,17 @@
 
 #import "ViewController.h"
 #import "HttpDownloadHandle.h"
+#import "ImageDownloadHandle.h"
 #import <QuickLook/QuickLook.h>
 
-@interface ViewController () <HttpDownloadHandleDelegate,UITableViewDelegate,UITableViewDataSource,QLPreviewControllerDelegate,QLPreviewControllerDataSource>
+@interface ViewController () <DownloadHandleDelegate,UITableViewDelegate,UITableViewDataSource,QLPreviewControllerDelegate,QLPreviewControllerDataSource>
 
 @property (strong, nonatomic) HttpDownloadHandle *downloadhandle;
+@property (strong, nonatomic) ImageDownloadHandle *downloadhandle2;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) NSMutableArray *ar;
 @property (strong, nonatomic) NSString *currentImagePath;
+- (IBAction)clear:(id)sender;
 
 @end
 
@@ -27,9 +30,13 @@
     self.ar = [NSMutableArray array];
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
-    [HttpDownloadHandle clear];
-    self.downloadhandle = [[HttpDownloadHandle alloc]init];
-    self.downloadhandle.delegate = self;
+//    [HttpDownloadHandle clear];
+//    self.downloadhandle = [[HttpDownloadHandle alloc]init];
+//    self.downloadhandle.delegate = self;
+    
+    [ImageDownloadHandle clear];
+    self.downloadhandle2 = [[ImageDownloadHandle alloc]init];
+    self.downloadhandle2.delegate = self;
 }
 
 
@@ -39,7 +46,7 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void)httpDownloadHandle:(HttpDownloadHandle *)handle downloadNewImage:(NSString *)imagePath
+- (void)downloadHandle:(id<DownLoadHandleProtocol>)handle downloadNewImage:(NSString *)imagePath
 {
     [self.ar addObject:imagePath];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -105,4 +112,8 @@
     return 1;
 }
 
+- (IBAction)clear:(id)sender {
+    
+    self.downloadhandle2 = nil;
+}
 @end

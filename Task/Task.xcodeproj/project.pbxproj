@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		046479DD20EF11E900A17C19 /* ImageDownloadHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 046479DC20EF11E900A17C19 /* ImageDownloadHandle.m */; };
+		046479E320EF1AFB00A17C19 /* HttpDownloadOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 046479E220EF1AFB00A17C19 /* HttpDownloadOperation.m */; };
+		04A7758C20F453730092E9B6 /* DownloadOperationQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 04A7758B20F453730092E9B6 /* DownloadOperationQueue.m */; };
 		6503BEDAC07F65C92B8E6B45 /* libPods-Task.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E812FC78FBFFFBC6C3808889 /* libPods-Task.a */; };
 		86AF782D1EFA660C00851BCA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 86AF782C1EFA660C00851BCA /* main.m */; };
 		86AF78301EFA660C00851BCA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 86AF782F1EFA660C00851BCA /* AppDelegate.m */; };
@@ -45,6 +48,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		046479DB20EF11E900A17C19 /* ImageDownloadHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImageDownloadHandle.h; sourceTree = "<group>"; };
+		046479DC20EF11E900A17C19 /* ImageDownloadHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ImageDownloadHandle.m; sourceTree = "<group>"; };
+		046479DE20EF12B300A17C19 /* DownLoadHandleProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DownLoadHandleProtocol.h; sourceTree = "<group>"; };
+		046479E120EF1AFB00A17C19 /* HttpDownloadOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HttpDownloadOperation.h; sourceTree = "<group>"; };
+		046479E220EF1AFB00A17C19 /* HttpDownloadOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HttpDownloadOperation.m; sourceTree = "<group>"; };
+		04A7758A20F453730092E9B6 /* DownloadOperationQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DownloadOperationQueue.h; sourceTree = "<group>"; };
+		04A7758B20F453730092E9B6 /* DownloadOperationQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloadOperationQueue.m; sourceTree = "<group>"; };
 		3568DE712063E4BD61D2E2CB /* Pods-Task.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Task.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Task/Pods-Task.debug.xcconfig"; sourceTree = "<group>"; };
 		67F6841AAAFF9484650039E9 /* Pods-Task.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Task.release.xcconfig"; path = "Pods/Target Support Files/Pods-Task/Pods-Task.release.xcconfig"; sourceTree = "<group>"; };
 		86AF78281EFA660C00851BCA /* Task.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Task.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,6 +121,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		046479DA20EF11AE00A17C19 /* OperationQueue */ = {
+			isa = PBXGroup;
+			children = (
+				046479DB20EF11E900A17C19 /* ImageDownloadHandle.h */,
+				046479DC20EF11E900A17C19 /* ImageDownloadHandle.m */,
+				046479E120EF1AFB00A17C19 /* HttpDownloadOperation.h */,
+				046479E220EF1AFB00A17C19 /* HttpDownloadOperation.m */,
+				04A7758A20F453730092E9B6 /* DownloadOperationQueue.h */,
+				04A7758B20F453730092E9B6 /* DownloadOperationQueue.m */,
+			);
+			path = OperationQueue;
+			sourceTree = "<group>";
+		};
 		5F821989F53746A06BB12125 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -145,6 +168,8 @@
 		86AF782A1EFA660C00851BCA /* Task */ = {
 			isa = PBXGroup;
 			children = (
+				046479DE20EF12B300A17C19 /* DownLoadHandleProtocol.h */,
+				046479DA20EF11AE00A17C19 /* OperationQueue */,
 				86AF782E1EFA660C00851BCA /* AppDelegate.h */,
 				86AF782F1EFA660C00851BCA /* AppDelegate.m */,
 				86AF78311EFA660C00851BCA /* ViewController.h */,
@@ -407,13 +432,16 @@
 			files = (
 			);
 			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Task-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -424,6 +452,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				86AF799C1EFB574C00851BCA /* SimpleHttpDownloadTask.m in Sources */,
+				04A7758C20F453730092E9B6 /* DownloadOperationQueue.m in Sources */,
 				86AF78B31EFA673A00851BCA /* HttpDownloadTask_NetWorkErrorRetry.m in Sources */,
 				86AF78C01EFA699F00851BCA /* AFNetworkingTool.m in Sources */,
 				86AF78331EFA660C00851BCA /* ViewController.m in Sources */,
@@ -434,7 +463,9 @@
 				86AF782D1EFA660C00851BCA /* main.m in Sources */,
 				86AF79931EFB533800851BCA /* STTask.m in Sources */,
 				86AF79921EFB533800851BCA /* SyncTaskQueue.m in Sources */,
+				046479E320EF1AFB00A17C19 /* HttpDownloadOperation.m in Sources */,
 				86AF79A81EFBAA3100851BCA /* STExecuteTask.m in Sources */,
+				046479DD20EF11E900A17C19 /* ImageDownloadHandle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
